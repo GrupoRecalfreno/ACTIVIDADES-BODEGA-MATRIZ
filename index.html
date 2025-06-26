@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REGISTRO DE ACTIVIDADES</title>
+    <!-- Tailwind CSS CDN para estilos rápidos y responsivos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fuente Inter para una mejor legibilidad -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SheetJS (xlsx) CDN para exportar a Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        /* Estilos generales para el cuerpo y la fuente */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+        /* Estilos para el dropdown de filtro */
+        .filter-dropdown {
+            display: none; /* Oculto por defecto */
+            position: absolute; /* Posicionamiento absoluto respecto al padre */
+            background-color: white;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 10; /* Asegura que esté por encima de otros elementos */
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            max-height: 200px; /* Altura máxima con scroll */
+            overflow-y: auto;
+            min-width: 150px; /* Ancho mínimo para el dropdown */
+            left: 0; /* Alineado a la izquierda del icono de filtro */
+            top: 100%; /* Justo debajo del encabezado */
+        }
+        .filter-dropdown label {
+            display: flex; 
+            align-items: center; 
+            padding: 0.25rem 0;
+            white-space: normal;
+            text-align: left;
+        }
+        .filter-icon {
+            cursor: pointer;
+            margin-left: 0.5rem;
+            font-size: 0.75rem; 
+            color: #4a5568;
+        }
+        /* Estilo para filas seleccionadas en la tabla */
+        .selected-row {
+            background-color: #e0f2fe; /* Azul claro para la fila seleccionada */
+        }
+        /* Estilo para filas finalizadas */
+        .finished-row {
+            background-color: #f3f4f6; /* Gris claro para filas finalizadas */
+            color: #718096; /* Texto más tenue */
+        }
+        /* Main and section titles */
+        .main-title, .section-title {
+            font-size: 1.875rem; 
+            line-height: 2.25rem;
+            font-weight: 700;
+            text-align: center;
+            color: #1a202c; 
+            margin-bottom: 1.5rem; 
+            text-transform: uppercase;
+        }
+        /* Form label adjustments */
+        .form-label {
+            font-size: 1.125rem;
+            line-height: 1.75rem;
+            font-weight: 500;
+            color: #4a5568; 
+            margin-bottom: 0.25rem;
+            text-align: center; 
+            text-transform: uppercase;
+            display: block;
+        }
+         /* Activity checkbox group styling */
+        .activity-checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem; /* Space between checkboxes */
+        }
+        /* Estilo para hacer que los encabezados de tabla sean fijos al hacer scroll */
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 20; /* Asegura que esté por encima del contenido que se desplaza */
+            background-color: #e2e8f0; /* Fondo para el encabezado pegajoso (gray-200 de Tailwind) */
+        }
+    </style>
+</head>
+<body class="p-4 bg-gray-100 min-h-screen flex flex-col items-center">
+    <div class="max-w-4xl w-full bg-white p-6 rounded-xl shadow-lg mb-8">
+        <h1 class="main-title">REGISTRO DE ACTIVIDADES</h1>
+
+        <!-- Activity Registration Form -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+                <label for="grupo" class="form-label">Grupo:</label>
+                <select id="grupo" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-200">
+                    <option value="">SELECCIONE UN GRUPO</option>
+                    <option value="GRUPO 1">GRUPO 1: HAROLD, SAMUEL, JOAQUIN (LIDER: HAROLD)</option>
+                    <option value="GRUPO 2">GRUPO 2: YANDRI, RAMIRO, ALEX J., BONE (LIDER: BONE)</option>
+                    <option value="GRUPO 3">GRUPO 3: CHARLIE, DIEGO, FABIAN, JORGE (LIDER: DIEGO)</option>
+                    <option value="GRUPO 4">GRUPO 4: PATRICIO N, SANTIAGO, LUIS M. (LIDER: LUIS M.)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="form-label">Actividad a Realizar:</label>
+                <div id="activity-list" class="mt-1 activity-checkbox-group">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="actividad" value="LIMPIEZA" class="form-checkbox h-4 w-4 text-blue-600 rounded disabled:bg-gray-200">
+                        <span class="ml-2 text-gray-700 uppercase">LIMPIEZA</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="actividad" value="ARREGLO DE CAJAS" class="form-checkbox h-4 w-4 text-blue-600 rounded disabled:bg-gray-200">
+                        <span class="ml-2 text-gray-700 uppercase">ARREGLO DE CAJAS</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="actividad" value="VERIFICACIÓN DE PRODUCTOS EN PERCHAS" class="form-checkbox h-4 w-4 text-blue-600 rounded disabled:bg-gray-200">
+                        <span class="ml-2 text-gray-700 uppercase">VERIFICACIÓN DE PRODUCTOS EN PERCHAS</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="actividad" value="PERCHAR MERCADERÍA DE ABASTECIMIENTO" class="form-checkbox h-4 w-4 text-blue-600 rounded disabled:bg-gray-200">
+                        <span class="ml-2 text-gray-700 uppercase">PERCHAR MERCADERÍA DE ABASTECIMIENTO</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Evaluation and Observation Section (initially hidden) -->
+        <div id="evaluationSection" class="mb-6 border-t pt-4 mt-4 hidden">
+            <h2 class="section-title">Evaluación de la Actividad</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="form-label">Evaluación:</label>
+                    <div class="mt-1 activity-checkbox-group"> 
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="evaluacion" value="CUMPLE" class="form-checkbox h-4 w-4 text-green-600 rounded">
+                            <span class="ml-2 text-gray-700 uppercase">CUMPLE</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="evaluacion" value="CUMPLE PARCIALMENTE" class="form-checkbox h-4 w-4 text-yellow-600 rounded">
+                            <span class="ml-2 text-gray-700 uppercase">CUMPLE PARCIALMENTE</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="evaluacion" value="NO CUMPLE" class="form-checkbox h-4 w-4 text-red-600 rounded">
+                            <span class="ml-2 text-gray-700 uppercase">NO CUMPLE</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <label for="observacion" class="form-label">Observación:</label>
+                    <textarea id="observacion" rows="3" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 uppercase"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application message container -->
+        <div id="messageBox" class="hidden bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline" id="messageText"></span>
+            <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="document.getElementById('messageBox').classList.add('hidden')">
+                <svg class="fill-current h-6 w-6 text-blue-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Cerrar</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.103l-2.651 2.646a1.2 1.2 0 1 1-1.697-1.697L8.303 9.406 5.651 6.754a1.2 1.2 0 1 1 1.697-1.697L10 7.709l2.651-2.646a1.2 1.2 0 0 1 1.697 1.697L11.697 9.406l2.651 2.646a1.2 1.2 0 0 1 0 1.697z"/></svg>
+            </span>
+        </div>
+        
+        <!-- Action Buttons: Registrar, Fin, Descargar Excel -->
+        <div class="flex justify-center space-x-4 mb-8">
+            <button id="btnRegistrar" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed uppercase">
+                Registrar
+            </button>
+            <button id="btnFin" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed uppercase">
+                Finalizar
+            </button>
+            <button id="btnDownloadExcel" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 uppercase">
+                Descargar Excel
+            </button>
+        </div>
+
+        <!-- PENDING ACTIVITIES Section -->
+        <h2 class="section-title">TAREAS PENDIENTES</h2>
+        <div class="overflow-x-auto rounded-lg shadow mb-8">
+            <table id="pendingActivityTable" class="min-w-full bg-white border-collapse">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="py-3 px-4 text-left text-base font-semibold text-gray-700 uppercase tracking-wider">Seleccionar</th>
+                        <th class="py-3 px-4 text-left text-base font-semibold text-gray-700 uppercase tracking-wider">Grupo</th>
+                        <th class="py-3 px-4 text-left text-base font-semibold text-gray-700 uppercase tracking-wider">Actividad</th>
+                        <th class="py-3 px-4 text-left text-base font-semibold text-gray-700 uppercase tracking-wider">Fecha</th>
+                        <th class="py-3 px-4 text-left text-base font-semibold text-gray-700 uppercase tracking-wider">Inicio</th>
+                    </tr>
+                </thead>
+                <tbody id="pendingActivityTableBody">
+                    <!-- Pending activity rows will be dynamically inserted here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- FINISHED ACTIVITIES Section -->
+        <h2 class="section-title">ACTIVIDADES FINALIZADAS</h2>
+        <div class="overflow-x-auto overflow-y-auto max-h-60 rounded-lg shadow">
+            <table id="finishedActivityTable" class="min-w-full bg-white border-collapse">
+                <thead class="bg-gray-200 sticky-header">
+                    <tr>
+                        <th class="py-3 px-4 text-base font-semibold text-gray-700 uppercase tracking-wider relative">
+                            <div class="flex items-center justify-center">Grupo<span class="filter-icon" data-column="grupo">▼</span></div>
+                            <div class="filter-dropdown" data-column="grupo-filter"></div>
+                        </th>
+                        <th class="py-3 px-4 text-base font-semibold text-gray-700 uppercase tracking-wider relative">
+                             <div class="flex items-center justify-center">Actividad<span class="filter-icon" data-column="actividad">▼</span></div>
+                            <div class="filter-dropdown" data-column="actividad-filter"></div>
+                        </th>
+                        <th class="py-3 px-4 text-base font-semibold text-gray-700 uppercase tracking-wider relative">
+                             <div class="flex items-center justify-center">Fecha<span class="filter-icon" data-column="fecha">▼</span></div>
+                            <div class="filter-dropdown" data-column="fecha-filter"></div>
+                        </th>
+                        <th class="py-3 px-4 text-base font-semibold text-gray-700 uppercase tracking-wider relative">
+                            <div class="flex items-center justify-center">Inicio<span class="filter-icon" data-column="horaInicio">▼</span></div>
+                            <div class="filter-dropdown" data-column="horaInicio-filter"></div>
+                        </th>
+                        <th class="py-3 px-4 text-base font-semibold text-gray-700 uppercase tracking-wider relative">
+                            <div class="flex items-center justify-center">Fin<span class="filter-icon" data-column="horaFinalizacion">▼</span></div>
+                            <div class="filter-dropdown" data-column="horaFinalizacion-filter"></div>
+                        </th>
+                        <th class="py-3 px-4 text-base font-semibold text-gray-700 uppercase tracking-wider relative">
+                            <div class="flex items-center justify-center">Evaluación<span class="filter-icon" data-column="evaluacion">▼</span></div>
+                            <div class="filter-dropdown" data-column="evaluacion-filter"></div>
+                        </th>
+                        <th class="py-3 px-4 text-base font-semibold text-gray-700 uppercase tracking-wider relative">
+                            <div class="flex items-center justify-center">Observación<span class="filter-icon" data-column="observacion">▼</span></div>
+                            <div class="filter-dropdown" data-column="observacion-filter"></div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="finishedActivityTableBody">
+                    <!-- Finished activity rows will be dynamically inserted here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Firebase script and application logic -->
+    <script type="module">
+        // Import only necessary functions from Firebase SDK for App and Realtime Database
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getDatabase, ref, push, set, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        // Firebase configuration (provided by the user)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEbDlTHf3OHD13nhl0NiT-o3v-xU7Rzes",
+            authDomain: "bodegamatrizactividades-ccb41.firebaseapp.com",
+            projectId: "bodegamatrizactividades-ccb41",
+            storageBucket: "bodegamatrizactividades-ccb41.firebasestorage.app",
+            messagingSenderId: "239971005465",
+            appId: "1:239971005465:web:a3f18072493be5184b6688",
+            measurementId: "G-CM7CJ0VXP7"
+        };
+
+        // Global variables for Firebase and application data
+        let app;
+        let db;
+        let activities = []; // Stores all activities loaded from the database
+        let selectedActivityDocId = null; // ID of the currently selected activity for editing/finalization
+        let currentFilters = {}; // Object to store active filters applied to the table
+
+        // Get app ID and Firebase config from the Canvas environment
+        // appId is used to create a unique path for this app's data in Firebase
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseEnvConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfig;
+
+        // DOM element references
+        const grupoSelect = document.getElementById('grupo');
+        const actividadCheckboxes = document.querySelectorAll('input[name="actividad"]');
+        const btnRegistrar = document.getElementById('btnRegistrar');
+        const btnFin = document.getElementById('btnFin');
+        const btnDownloadExcel = document.getElementById('btnDownloadExcel');
+        const pendingActivityTableBody = document.getElementById('pendingActivityTableBody');
+        const finishedActivityTableBody = document.getElementById('finishedActivityTableBody');
+        const evaluationSection = document.getElementById('evaluationSection');
+        const evaluacionInputs = document.querySelectorAll('input[name="evaluacion"]');
+        const observacionTextarea = document.getElementById('observacion');
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+
+        /**
+         * Manages the user interface state.
+         * Enables/disables fields based on whether we are registering or finalizing a task.
+         * @param {'registration' | 'finalization'} mode - The mode to activate.
+         */
+        function setUIMode(mode) {
+            if (mode === 'finalization') {
+                // Finalization Mode: User has selected a pending task.
+                // Disable the registration form.
+                grupoSelect.disabled = true;
+                actividadCheckboxes.forEach(cb => cb.disabled = true);
+                grupoSelect.value = ''; // Clear selection to avoid confusion
+                actividadCheckboxes.forEach(cb => cb.checked = false); // Clear checkboxes
+
+                // Show the evaluation section.
+                evaluationSection.classList.remove('hidden');
+
+            } else { // 'registration' or default state
+                // Registration Mode: User is creating a new task.
+                // Enable the registration form.
+                grupoSelect.disabled = false;
+                actividadCheckboxes.forEach(cb => cb.disabled = false);
+
+                // Hide and clear the evaluation section.
+                evaluationSection.classList.add('hidden');
+                evaluacionInputs.forEach(input => input.checked = false);
+                observacionTextarea.value = '';
+                selectedActivityDocId = null; // Ensure no task is selected
+
+                // Uncheck any checkbox in the pending tasks table.
+                document.querySelectorAll('#pendingActivityTableBody input[type="checkbox"]').forEach(cb => {
+                    cb.checked = false;
+                });
+            }
+            // Update the state of the buttons in both cases.
+            toggleRegistrarButton();
+            toggleFinButton();
+        }
+
+        /**
+         * Displays a message to the user in an alert box.
+         * @param {string} message - The message text.
+         * @param {'info'|'success'|'error'} type - The message type for styling.
+         */
+        function showMessage(message, type = 'info') {
+            messageText.textContent = message;
+            messageBox.className = 'px-4 py-3 rounded relative mb-4'; // Reset classes
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
+            } else if (type === 'success') {
+                messageBox.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
+            } else {
+                messageBox.classList.add('bg-blue-100', 'border-blue-400', 'text-blue-700');
+            }
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 5000);
+        }
+
+        /**
+         * Gets the current date and time in Ecuador's format (GTM-5).
+         * @returns {{date: string, time: string}} Object with date (DD/MM/YYYY) and time (HH:MM).
+         */
+        function getEcuadorDateTime() {
+            const now = new Date();
+            // Use Intl.DateTimeFormat for robust timezone handling
+            const dateOptions = { timeZone: 'America/Guayaquil', day: '2-digit', month: '2-digit', year: 'numeric' };
+            const timeOptions = { timeZone: 'America/Guayaquil', hour: '2-digit', minute: '2-digit', hour12: false };
+            
+            const date = new Intl.DateTimeFormat('es-EC', dateOptions).format(now);
+            const time = new Intl.DateTimeFormat('es-EC', timeOptions).format(now);
+            
+            return { date, time };
+        }
+
+        /**
+         * Toggles the "Registrar" button's state based on form input.
+         */
+        function toggleRegistrarButton() {
+            const selectedGrupo = grupoSelect.value !== '';
+            const selectedActividades = Array.from(actividadCheckboxes).some(cb => cb.checked);
+            // The registrar button is enabled if fields are filled AND no pending activity is selected for finalization.
+            btnRegistrar.disabled = !(selectedGrupo && selectedActividades) || selectedActivityDocId !== null;
+        }
+
+        /**
+         * Toggles the "Fin" button's state based on selection.
+         */
+        function toggleFinButton() {
+            const isPendingTaskSelected = selectedActivityDocId !== null;
+            const isEvaluationSelected = Array.from(evaluacionInputs).some(input => input.checked);
+            // The finalize button is enabled only if a task is selected AND an evaluation is checked.
+            btnFin.disabled = !(isPendingTaskSelected && isEvaluationSelected);
+        }
+
+        // --- Event Listeners for enabling/disabling buttons ---
+        grupoSelect.addEventListener('change', toggleRegistrarButton);
+        actividadCheckboxes.forEach(cb => cb.addEventListener('change', toggleRegistrarButton));
+        evaluacionInputs.forEach(input => input.addEventListener('change', (event) => {
+            // Uncheck all other evaluation checkboxes when one is clicked
+            evaluacionInputs.forEach(otherInput => {
+                if (otherInput !== event.target) {
+                    otherInput.checked = false;
+                }
+            });
+            toggleFinButton(); // Update Fin button state
+        }));
+        observacionTextarea.addEventListener('input', toggleFinButton); // Added listener for observation textarea
+
+        // --- Registrar button click event ---
+        btnRegistrar.addEventListener('click', async () => {
+            const grupo = grupoSelect.value;
+            const actividadesSeleccionadas = Array.from(actividadCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            if (!grupo || actividadesSeleccionadas.length === 0) {
+                showMessage('POR FAVOR, SELECCIONE UN GRUPO Y AL MENOS UNA ACTIVIDAD.', 'error');
+                return;
+            }
+
+            const { date, time } = getEcuadorDateTime();
+
+            const newActivity = {
+                grupo: grupo,
+                actividad: actividadesSeleccionadas,
+                fecha: date,
+                horaInicio: time,
+                horaFinalizacion: '',
+                estadoActividad: 'PENDIENTE',
+                evaluacion: '',
+                observacion: '',
+                createdAt: Date.now() // Timestamp for sorting
+            };
+
+            try {
+                // Modified path for global activities
+                const activitiesRef = ref(db, `artifacts/${appId}/actividades_globales`);
+                await push(activitiesRef, newActivity);
+                showMessage('ACTIVIDAD REGISTRADA CON ÉXITO!', 'success');
+
+                // Clear form after registration. setUIMode does most of it.
+                grupoSelect.value = '';
+                actividadCheckboxes.forEach(cb => cb.checked = false);
+                toggleRegistrarButton();
+
+            } catch (e) {
+                console.error("ERROR ADDING DOCUMENT TO REALTIME DATABASE: ", e);
+                showMessage(`ERROR AL REGISTRAR LA ACTIVIDAD: ${e.message}.`, 'error');
+            }
+        });
+
+        // --- Fin button click event ---
+        btnFin.addEventListener('click', async () => {
+            if (!selectedActivityDocId) {
+                showMessage('POR FAVOR, SELECCIONE UNA ACTIVIDAD PENDIENTE PARA FINALIZAR.', 'error');
+                return;
+            }
+
+            const activityToUpdate = activities.find(a => a.id === selectedActivityDocId);
+
+            if (!activityToUpdate || activityToUpdate.estadoActividad !== 'PENDIENTE') {
+                showMessage('LA ACTIVIDAD SELECCIONADA YA NO ESTÁ PENDIENTE O NO EXISTE.', 'error');
+                setUIMode('registration'); // Revert to registration mode
+                return;
+            }
+
+            const selectedEvaluacionInput = Array.from(evaluacionInputs).find(input => input.checked);
+            if (!selectedEvaluacionInput) {
+                showMessage('POR FAVOR, COMPLETE LA EVALUACIÓN ANTES DE FINALIZAR.', 'error');
+                return;
+            }
+
+            const { time } = getEcuadorDateTime();
+
+            const updatedActivityData = {
+                ...activityToUpdate,
+                horaFinalizacion: time,
+                estadoActividad: 'FINALIZADA',
+                evaluacion: selectedEvaluacionInput.value,
+                observacion: observacionTextarea.value.toUpperCase()
+            };
+
+            try {
+                // Modified path for global activities
+                const activityRef = ref(db, `artifacts/${appId}/actividades_globales/${selectedActivityDocId}`);
+                await set(activityRef, updatedActivityData);
+                showMessage('ACTIVIDAD FINALIZADA CON ÉXITO!', 'success');
+                // Revert UI to registration mode after finalization.
+                setUIMode('registration');
+            } catch (e) {
+                console.error("ERROR UPDATING DOCUMENT IN REALTIME DATABASE: ", e);
+                showMessage(`ERROR AL FINALIZAR LA ACTIVIDAD: ${e.message}.`, 'error');
+            }
+        });
+
+        // --- Descargar Excel button click event ---
+        btnDownloadExcel.addEventListener('click', () => {
+            // Filter activities to get only the finalized ones and apply current filters
+            const finalizedAndFilteredActivities = activities.filter(activity => {
+                if (activity.estadoActividad !== 'FINALIZADA') {
+                    return false;
+                }
+                for (const col in currentFilters) {
+                    const filterValues = currentFilters[col];
+                    if (!filterValues.length) continue; // If no filters for this column, assume 'all'
+                    let activityValue = activity[col];
+
+                    // Handle array values (like 'actividad')
+                    if (Array.isArray(activityValue)) {
+                        if (!filterValues.some(val => activityValue.includes(val))) {
+                            return false;
+                        }
+                    } else if (!filterValues.includes(String(activityValue))) { // Convert to string for comparison if necessary
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            // Define table headers for the Excel file
+            const headers = ['GRUPO', 'ACTIVIDAD', 'FECHA', 'INICIO', 'FIN', 'EVALUACIÓN', 'OBSERVACIÓN'];
+            
+            // Prepare data for the spreadsheet
+            const dataToExport = [headers]; // First row are the headers
+            finalizedAndFilteredActivities.forEach(activity => {
+                const row = [
+                    activity.grupo || '',
+                    (Array.isArray(activity.actividad) ? activity.actividad.join(', ') : activity.actividad) || '',
+                    activity.fecha || '',
+                    activity.horaInicio || '',
+                    activity.horaFinalizacion || '',
+                    activity.evaluacion || '',
+                    activity.observacion || ''
+                ];
+                dataToExport.push(row);
+            });
+
+            // Create a new workbook and spreadsheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(dataToExport);
+
+            // Add the spreadsheet to the workbook
+            XLSX.utils.book_append_sheet(wb, ws, "Actividades Finalizadas");
+
+            // Write the XLSX file and download it
+            XLSX.writeFile(wb, "Actividades_Finalizadas.xlsx");
+        });
+
+        /**
+         * Renders a specific activity table (pending or finished).
+         * @param {Array<Object>} activitiesToRender - Array of activities to display.
+         * @param {HTMLElement} tableBodyElement - The tbody element to render into.
+         * @param {boolean} isPendingTable - True for the pending table (adds checkboxes).
+         */
+        function renderTable(activitiesToRender, tableBodyElement, isPendingTable) {
+            tableBodyElement.innerHTML = ''; // Clear current table content
+
+            activitiesToRender.sort((a, b) => {
+                if (a.estadoActividad === 'PENDIENTE') return a.createdAt - b.createdAt; // Oldest pending first
+                return b.createdAt - a.createdAt; // Newest finished first
+            });
+
+            activitiesToRender.forEach(activity => {
+                const row = tableBodyElement.insertRow();
+                row.className = 'border-b border-gray-200 hover:bg-gray-100';
+
+                if (selectedActivityDocId === activity.id) {
+                    row.classList.add('selected-row');
+                }
+                if (activity.estadoActividad === 'FINALIZADA') {
+                    row.classList.add('finished-row');
+                }
+
+                if (isPendingTable) {
+                    const checkboxCell = row.insertCell();
+                    checkboxCell.className = 'py-3 px-4 text-center';
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'form-checkbox h-4 w-4 text-blue-600 rounded';
+                    checkbox.checked = selectedActivityDocId === activity.id;
+
+                    checkbox.onclick = () => {
+                        // Uncheck all other checkboxes
+                        document.querySelectorAll('#pendingActivityTableBody input[type="checkbox"]').forEach(cb => {
+                            if (cb !== checkbox) cb.checked = false;
+                        });
+
+                        if (checkbox.checked) {
+                            // If checked, enter 'Finalization Mode'
+                            selectedActivityDocId = activity.id;
+                            setUIMode('finalization');
+                            
+                            // Load activity data into the evaluation form
+                            observacionTextarea.value = activity.observacion || '';
+                            evaluacionInputs.forEach(input => {
+                                input.checked = (input.value === activity.evaluacion);
+                            });
+                            
+                        } else {
+                            // If unchecked, return to 'Registration Mode'
+                            selectedActivityDocId = null;
+                            setUIMode('registration');
+                        }
+                        
+                        // Re-render tables to reflect selected row style.
+                        renderActivities();
+                    };
+                    checkboxCell.appendChild(checkbox);
+                }
+
+                const columnsToRender = isPendingTable 
+                    ? ['grupo', 'actividad', 'fecha', 'horaInicio']
+                    : ['grupo', 'actividad', 'fecha', 'horaInicio', 'horaFinalizacion', 'evaluacion', 'observacion'];
+
+                columnsToRender.forEach(colName => {
+                    const cell = row.insertCell();
+                    cell.className = 'py-3 px-4 text-sm text-gray-800 whitespace-nowrap uppercase';
+                    let displayValue = activity[colName] || 'N/A';
+                    cell.textContent = Array.isArray(displayValue) ? displayValue.join(', ') : displayValue;
+                });
+            });
+            toggleFinButton();
+        }
+
+        /**
+         * Renders activities into the two HTML tables, applying current filters.
+         */
+        function renderActivities() {
+            let activitiesToDisplay = activities.filter(activity => {
+                for (const col in currentFilters) {
+                    const filterValues = currentFilters[col];
+                    if (!filterValues.length) continue;
+                    let activityValue = activity[col];
+
+                    if (Array.isArray(activityValue)) {
+                        if (!filterValues.some(val => activityValue.includes(val))) return false;
+                    } else if (!filterValues.includes(String(activityValue))) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            const pendingActivities = activitiesToDisplay.filter(act => act.estadoActividad === 'PENDIENTE');
+            const finishedActivities = activitiesToDisplay.filter(act => act.estadoActividad === 'FINALIZADA');
+
+            renderTable(pendingActivities, pendingActivityTableBody, true);
+            renderTable(finishedActivities, finishedActivityTableBody, false);
+        }
+
+        /**
+         * Initializes listeners for filter icons in the finished table header.
+         */
+        function initializeFilters() {
+            document.querySelectorAll('#finishedActivityTable .filter-icon').forEach(icon => {
+                const column = icon.dataset.column;
+                const dropdown = document.querySelector(`.filter-dropdown[data-column="${column}-filter"]`);
+                
+                const newIcon = icon.cloneNode(true);
+                icon.parentNode.replaceChild(newIcon, icon);
+
+                newIcon.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    const isVisible = dropdown.style.display === 'block';
+                    document.querySelectorAll('.filter-dropdown').forEach(d => d.style.display = 'none');
+                    if (!isVisible) {
+                        populateFilterDropdown(column, dropdown);
+                        dropdown.style.display = 'block';
+                    }
+                });
+            });
+
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.filter-dropdown').forEach(dropdown => dropdown.style.display = 'none');
+            });
+        }
+
+        /**
+         * Populates a filter dropdown with unique values from a specific column.
+         * @param {string} columnName - The name of the column (e.g., 'grupo').
+         * @param {HTMLElement} dropdownElement - The filter dropdown DOM element.
+         */
+        function populateFilterDropdown(columnName, dropdownElement) {
+            dropdownElement.innerHTML = '';
+            const uniqueValues = new Set();
+            activities.forEach(activity => {
+                const value = activity[columnName];
+                if (Array.isArray(value)) {
+                    value.forEach(item => uniqueValues.add(item));
+                } else if(value) {
+                    uniqueValues.add(value);
+                }
+            });
+
+            const allLabel = document.createElement('label');
+            allLabel.className = 'flex items-center justify-start p-1 hover:bg-gray-100 rounded';
+            allLabel.innerHTML = `<input type="checkbox" value="all" class="mr-2 rounded text-blue-600"> <span class="uppercase font-bold">(TODOS)</span>`;
+            dropdownElement.appendChild(allLabel);
+
+            const allCheckbox = allLabel.querySelector('input');
+            const itemCheckboxes = [];
+
+            Array.from(uniqueValues).sort().forEach(value => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center justify-start p-1 hover:bg-gray-100 rounded';
+                label.innerHTML = `<input type="checkbox" value="${value}" class="mr-2 rounded text-blue-600"> <span class="uppercase">${value || 'VACÍO'}</span>`;
+                dropdownElement.appendChild(label);
+                itemCheckboxes.push(label.querySelector('input'));
+            });
+            
+            const currentColumnFilters = currentFilters[columnName];
+            const allSelected = !currentColumnFilters || currentColumnFilters.length === 0 || currentColumnFilters.length === itemCheckboxes.length;
+            
+            allCheckbox.checked = allSelected;
+            itemCheckboxes.forEach(cb => cb.checked = allSelected || currentColumnFilters.includes(cb.value));
+
+            allCheckbox.addEventListener('change', () => {
+                itemCheckboxes.forEach(cb => cb.checked = allCheckbox.checked);
+                applyFilters();
+            });
+
+            itemCheckboxes.forEach(cb => cb.addEventListener('change', () => {
+                allCheckbox.checked = itemCheckboxes.every(item => item.checked);
+                applyFilters();
+            }));
+        }
+
+        /**
+         * Applies selected filters to activities and re-renders the tables.
+         */
+        function applyFilters() {
+            currentFilters = {};
+            document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
+                const columnName = dropdown.dataset.column.replace('-filter', '');
+                const allCheckbox = dropdown.querySelector('input[value="all"]');
+                if (allCheckbox && !allCheckbox.checked) {
+                    const selectedValues = [];
+                    dropdown.querySelectorAll('input[type="checkbox"]:checked:not([value="all"])').forEach(cb => selectedValues.push(cb.value));
+                    currentFilters[columnName] = selectedValues;
+                }
+            });
+            renderActivities();
+        }
+
+        /**
+         * Sets up the Realtime Database listener for live updates on activities.
+         * This version accesses a public global collection, no userId needed.
+         * @param {Object} db - Realtime Database instance.
+         */
+        async function setupRealtimeDatabaseListener(db) {
+            // Define a global public path for activities for this specific app
+            // This path should have .read: true, .write: true rules in Firebase
+            const activitiesPath = `artifacts/${appId}/actividades_globales`; 
+            const activitiesRef = ref(db, activitiesPath);
+            console.log(`Configuring Realtime Database listener for public path: ${activitiesPath}`);
+
+            onValue(activitiesRef, (snapshot) => {
+                const fetchedActivities = [];
+                const data = snapshot.val(); 
+
+                if (data) {
+                    for (const key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            fetchedActivities.push({ id: key, ...data[key] });
+                        }
+                    }
+                }
+                
+                activities = fetchedActivities;
+                
+                const currentSelected = selectedActivityDocId ? activities.find(act => act.id === selectedActivityDocId) : null;
+                if (!currentSelected || currentSelected.estadoActividad !== 'PENDIENTE') {
+                    if (selectedActivityDocId) setUIMode('registration');
+                }
+                
+                renderActivities();
+                initializeFilters();
+            }, (error) => {
+                console.error("Error listening to Realtime Database changes: ", error);
+                showMessage(`ERROR AL CARGAR ACTIVIDADES EN TIEMPO REAL: ${error.message}. ASEGÚRESE DE QUE LAS REGLAS DE REALTIME DATABASE PERMITAN LA LECTURA.`, 'error');
+            });
+        }
+
+        // --- Firebase Initialization ---
+        window.onload = async function() {
+            try {
+                console.log("Starting Firebase application...");
+                app = initializeApp(firebaseEnvConfig);
+                console.log("Firebase app initialized.");
+
+                db = getDatabase(app); 
+                console.log("Realtime Database service obtained.");
+                
+                // No authentication logic is needed here as per the new requirement
+                // Data will be publicly accessible based on Firebase rules
+
+                setupRealtimeDatabaseListener(db); 
+
+                setUIMode('registration'); // Set initial UI state on page load
+
+            } catch (error) {
+                console.error("CRITICAL ERROR INITIALIZING APP:", error);
+                showMessage(`CRÍTICAL ERROR INITIALIZING APP: ${error.message}.`, 'error');
+            }
+        };
+
+        /*
+         * IMPORTANT NOTE ON REALTIME DATABASE SECURITY RULES:
+         * To enable this app to function without explicit user authentication,
+         * you MUST set the following security rules in your Firebase console
+         * under "Realtime Database" -> "Rules".
+         *
+         * These rules grant public read and write access to the 'actividades_globales' path
+         * within your app's specific 'artifacts' node.
+         *
+         * {
+         * "rules": {
+         * "artifacts": {
+         * "$appId": {
+         * "actividades_globales": {
+         * ".read": true,
+         * ".write": true
+         * }
+         * }
+         * }
+         * }
+         * }
+         *
+         * MAKE SURE TO PUBLISH THESE RULES AFTER SETTING THEM.
+         */
+    </script>
+</body>
+</html>
